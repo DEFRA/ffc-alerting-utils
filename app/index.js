@@ -6,6 +6,16 @@ const MAX_SANITIZED_LENGTH = 200
 
 const trimString = (value) => (typeof value === 'string' ? value.trim() : value)
 
+let configuredTopic = null
+let configuredSource = null
+let configuredDefaultType = null
+
+const init = ({ topic, source, defaultType } = {}) => {
+  if (topic) configuredTopic = topic
+  if (source) configuredSource = source
+  if (defaultType) configuredDefaultType = defaultType
+}
+
 const getPropertyMessage = (object, propertyName) => {
   if (!object || typeof object !== 'object') {
     return undefined
@@ -139,7 +149,7 @@ const looksLikeAlert = (obj) =>
     Object.prototype.hasOwnProperty.call(obj, 'data'))
 
 const toAlert = (input, defaultType = undefined, options = {}) => {
-  const defaultSource = options.source || process.env.ALERT_SOURCE || 'ffc-doc-alerting'
+  const defaultSource = options.source || configuredSource || process.env.ALERT_SOURCE || 'ffc-doc-alerting'
 
   if (!input && input !== 0) {
     return null
@@ -188,7 +198,7 @@ const createAlerts = async (inputs, type, options = {}) => {
     return require('ffc-pay-event-publisher').EventPublisher
   })()
 
-  const alertTopic = topic || process.env.ALERT_TOPIC || 'ffc.alerts'
+  const alertTopic = topic || configuredTopic || process.env.ALERT_TOPIC || 'ffc.alerts'
 
   const list = Array.isArray(inputs) ? inputs : [inputs]
   if (!list.length) {
@@ -262,6 +272,8 @@ const deriveAlertData = (payload, processName) => {
     alertData.error = null
   }
 
+  alertData.plain_text = message
+
   return alertData
 }
 
@@ -280,12 +292,13 @@ const publish = async (alertPayloadArray, type, options = {}) => {
 const dataProcessingAlert = async (payload = {}, type, options = {}) => {
   const processName = validatePayload(payload)
   const { defaultType } = options
-  const effectiveType = type ?? defaultType ?? process.env.ALERT_TYPE
+  const effectiveType = type ?? defaultType ?? configuredDefaultType ?? process.env.ALERT_TYPE ?? 'uk.gov.defra.ffc.doc.data.processing.error'
   const alertData = deriveAlertData(payload, processName)
   await publish([alertData], effectiveType, options)
 }
 
 module.exports = {
+  init,
   createAlerts,
   dataProcessingAlert,
   deriveAlertData,

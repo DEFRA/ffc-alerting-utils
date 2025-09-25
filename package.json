@@ -1,15 +1,14 @@
 {
   "name": "ffc-alerting-utils",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Helper library for universal alerting functions between ffc-pay and ffc-doc alert services",
   "homepage": "https://github.com/DEFRA/ffc-alerting-utils",
-    "repository": {
+  "repository": {
     "type": "git",
-    "url": "https://github.com/DEFRA/ffc-alerting-utils.git"
+    "url": "git+https://github.com/DEFRA/ffc-alerting-utils.git"
   },
   "main": "app/index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "Defra",
   "contributors": [
     "Leigh Godson leigh.godson@atos.net"
