@@ -197,9 +197,7 @@ const toAlert = (input, defaultType = undefined, options = {}) => {
 
 const createAlerts = async (inputs, type, options = {}) => {
   const { EventPublisherClass, topic, logger = console } = options
-  const EventPublisherCtor = EventPublisherClass || configuredEventPublisherCtor || (() => {
-    return require('ffc-pay-event-publisher').EventPublisher
-  })()
+  const EventPublisherCtor = EventPublisherClass || configuredEventPublisherCtor || require('ffc-pay-event-publisher').EventPublisher
 
   const alertTopic = topic || configuredTopic || process.env.ALERT_TOPIC || 'ffc.alerts'
 
