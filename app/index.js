@@ -10,10 +10,13 @@ let configuredTopic = null
 let configuredSource = null
 let configuredDefaultType = null
 
-const init = ({ topic, source, defaultType } = {}) => {
+let configuredEventPublisherCtor = null
+
+const init = ({ topic, source, defaultType, EventPublisherClass } = {}) => {
   if (topic) configuredTopic = topic
   if (source) configuredSource = source
   if (defaultType) configuredDefaultType = defaultType
+  if (EventPublisherClass) configuredEventPublisherCtor = EventPublisherClass
 }
 
 const getPropertyMessage = (object, propertyName) => {
@@ -194,7 +197,7 @@ const toAlert = (input, defaultType = undefined, options = {}) => {
 
 const createAlerts = async (inputs, type, options = {}) => {
   const { EventPublisherClass, topic, logger = console } = options
-  const EventPublisherCtor = EventPublisherClass || (() => {
+  const EventPublisherCtor = EventPublisherClass || configuredEventPublisherCtor || (() => {
     return require('ffc-pay-event-publisher').EventPublisher
   })()
 
@@ -271,8 +274,6 @@ const deriveAlertData = (payload, processName) => {
   if (clearError) {
     alertData.error = null
   }
-
-  alertData.plain_text = message
 
   return alertData
 }
