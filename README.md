@@ -28,7 +28,28 @@ Options:
  - logger: object with .error/.info (defaults to console)
  - throwOnPublishError: boolean (passed through to dataProcessingAlert)
 
- Licence
+ Usage per-service:
+
+ In the app index (recommended), you can init the alerting by using a solution similar to the following in statement-constructor :
+
+ const alerting = require('ffc-alerting-utils')
+const messageConfig = require('./config/message')
+const { SOURCE } = require('./constants/source')
+const { DATA_PROCESSING_ERROR } = require('./constants/alerts')
+const { EventPublisher } = require('ffc-pay-event-publisher')
+
+if (alerting.init) {
+  alerting.init({
+    topic: messageConfig.alertTopic,
+    source: SOURCE,
+    defaultType: DATA_PROCESSING_ERROR,
+    EventPublisherClass: EventPublisher
+  })
+}
+
+
+
+## Licence
 THIS INFORMATION IS LICENSED UNDER THE CONDITIONS OF THE OPEN GOVERNMENT LICENCE found at:
 
 http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3
