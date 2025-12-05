@@ -27,6 +27,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,4 +37,7 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: npm install -g npm@latest
       - run: npm ci
-      - run: npm publish --access public
+      - name: Verify npm auth
+        run: npm whoami
+      - name: Publish to npm
+        run: npm publish --access public
