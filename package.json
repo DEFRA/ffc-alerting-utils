@@ -1,6 +1,6 @@
 {
   "name": "ffc-alerting-utils",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Helper library for universal alerting functions between ffc-pay and ffc-doc alert services",
   "homepage": "https://github.com/DEFRA/ffc-alerting-utils",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "main": "app/index.js",
   "scripts": {
-      "test": "echo \"No tests specified\" && exit 0"
+      "test": "echo \"No test specified\" && exit 0"
   },
   "author": "Defra",
   "contributors": [
