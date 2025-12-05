@@ -1,6 +1,6 @@
 {
   "name": "ffc-alerting-utils",
-  "version": "1.0.8",
+  "version": "1.0.7",
   "description": "Helper library for universal alerting functions between ffc-pay and ffc-doc alert services",
   "homepage": "https://github.com/DEFRA/ffc-alerting-utils",
   "repository": {
