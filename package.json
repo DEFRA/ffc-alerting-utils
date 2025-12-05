@@ -8,7 +8,9 @@
     "url": "git+https://github.com/DEFRA/ffc-alerting-utils.git"
   },
   "main": "app/index.js",
-  "scripts": {},
+  "scripts": {
+      "test": "echo \"No tests specified\" && exit 0"
+  },
   "author": "Defra",
   "contributors": [
     "Leigh Godson leigh.godson@atos.net"
