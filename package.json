@@ -9,33 +9,25 @@
   },
   "main": "app/index.js",
   "scripts": {
-      "test": "echo \"No test specified\" && exit 0"
+    "test": "echo \"No test specified\" && exit 0",
+    "test:lint": "eslint",
+    "test:lint:fix": "eslint --fix"
   },
   "author": "Defra",
   "contributors": [
-    "Leigh Godson leigh.godson@atos.net"
+    "Leigh Godson leigh.godson@atos.net",
+    "Sam Plackett samuel.plackett@atos.net"
   ],
   "license": "OGL-UK-3.0",
   "dependencies": {
     "@azure/identity": "4.3.0",
-    "ffc-pay-event-publisher": "1.2.0",
     "ffc-messaging": "2.9.1",
+    "ffc-pay-event-publisher": "1.2.0",
     "notifications-node-client": "8.2.1"
   },
   "devDependencies": {
-    "nodemon": "3.0.1",
-    "standard": "17.0.0"
-  },
-  "standard": {
-    "globals": [
-      "describe",
-      "beforeEach",
-      "expect",
-      "test",
-      "afterEach",
-      "jest",
-      "beforeAll",
-      "afterAll"
-    ]
+    "eslint": "9.39.2",
+    "neostandard": "0.12.2",
+    "nodemon": "3.0.1"
   }
 }
