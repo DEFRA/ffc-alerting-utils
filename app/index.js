@@ -159,45 +159,50 @@ const looksLikeAlert = (obj) =>
     Object.hasOwn(obj, 'type') ||
     Object.hasOwn(obj, 'data'))
 
+const ensureAlertDataHasMessage = (data, input) => {
+  if (typeof data === 'object' && data !== null) {
+    if (!Object.hasOwn(data, 'message')) {
+      data.message = normalizeMessage(input)
+    }
+    return data
+  }
+  return { message: normalizeMessage(input) }
+}
+
 const toAlert = (input, defaultType = undefined, options = {}) => {
   const defaultSource = options.source || configuredSource || process.env.ALERT_SOURCE || 'ffc-doc-alerting'
 
-  if (input || input === 0) {
-    if (looksLikeAlert(input)) {
-      const alert = {
-        source: input.source || defaultSource,
-        type: input.type || defaultType,
-        data: input.data !== undefined ? input.data : sanitizeValue(input)
-      }
+  if (!(input || input === 0)) {
+    return null
+  }
 
-      if (!alert.data) {
-        alert.data = { message: normalizeMessage(input) }
-      } else if (typeof alert.data === 'object' && !Object.hasOwn(alert.data, 'message')) {
-        alert.data.message = normalizeMessage(input)
-      }
-
-      return alert
+  if (looksLikeAlert(input)) {
+    const alert = {
+      source: input.source || defaultSource,
+      type: input.type || defaultType,
+      data: input.data !== undefined ? input.data : sanitizeValue(input)
     }
 
-    if (input instanceof Error) {
-      return {
-        source: defaultSource,
-        type: defaultType,
-        data: buildErrorData(input)
-      }
-    }
+    alert.data = ensureAlertDataHasMessage(alert.data, input)
+    return alert
+  }
 
-    const message = normalizeMessage(input)
-    const data = sanitizeValue(input) || {}
-    data.message = message
+  if (input instanceof Error) {
     return {
       source: defaultSource,
       type: defaultType,
-      data
+      data: buildErrorData(input)
     }
   }
 
-  return null
+  const message = normalizeMessage(input)
+  const data = sanitizeValue(input) || {}
+  data.message = message
+  return {
+    source: defaultSource,
+    type: defaultType,
+    data
+  }
 }
 
 const createAlerts = async (inputs, type, options = {}) => {
