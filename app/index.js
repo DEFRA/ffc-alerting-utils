@@ -154,10 +154,9 @@ const buildErrorData = (error) => {
 }
 
 const looksLikeAlert = (obj) =>
-  obj && typeof obj === 'object' &&
-  (Object.hasOwn(obj, 'source') ||
-    Object.hasOwn(obj, 'type') ||
-    Object.hasOwn(obj, 'data'))
+  obj &&
+  typeof obj === 'object' &&
+  (Object.hasOwn(obj, 'source') || Object.hasOwn(obj, 'type') || Object.hasOwn(obj, 'data'))
 
 const ensureAlertDataHasMessage = (data, input) => {
   if (typeof data === 'object' && data !== null) {
@@ -169,32 +168,23 @@ const ensureAlertDataHasMessage = (data, input) => {
   return { message: normalizeMessage(input) }
 }
 
-const toAlert = (input, defaultType = undefined, options = {}) => {
-  const defaultSource = options.source || configuredSource || process.env.ALERT_SOURCE || 'ffc-doc-alerting'
-
-  if (!(input || input === 0)) {
-    return null
+const createAlertFromAlertLike = (input, defaultType, defaultSource) => {
+  const alert = {
+    source: input.source || defaultSource,
+    type: input.type || defaultType,
+    data: input.data === undefined ? sanitizeValue(input) : input.data
   }
+  alert.data = ensureAlertDataHasMessage(alert.data, input)
+  return alert
+}
 
-  if (looksLikeAlert(input)) {
-    const alert = {
-      source: input.source || defaultSource,
-      type: input.type || defaultType,
-      data: input.data !== undefined ? input.data : sanitizeValue(input)
-    }
+const createAlertFromError = (input, defaultType, defaultSource) => ({
+  source: defaultSource,
+  type: defaultType,
+  data: buildErrorData(input)
+})
 
-    alert.data = ensureAlertDataHasMessage(alert.data, input)
-    return alert
-  }
-
-  if (input instanceof Error) {
-    return {
-      source: defaultSource,
-      type: defaultType,
-      data: buildErrorData(input)
-    }
-  }
-
+const createAlertFromOther = (input, defaultType, defaultSource) => {
   const message = normalizeMessage(input)
   const data = sanitizeValue(input) || {}
   data.message = message
@@ -203,6 +193,24 @@ const toAlert = (input, defaultType = undefined, options = {}) => {
     type: defaultType,
     data
   }
+}
+
+const toAlert = (input, defaultType = undefined, options = {}) => {
+  const defaultSource = options.source || configuredSource || process.env.ALERT_SOURCE || 'ffc-doc-alerting'
+
+  if (!(input || input === 0)) {
+    return null
+  }
+
+  if (looksLikeAlert(input)) {
+    return createAlertFromAlertLike(input, defaultType, defaultSource)
+  }
+
+  if (input instanceof Error) {
+    return createAlertFromError(input, defaultType, defaultSource)
+  }
+
+  return createAlertFromOther(input, defaultType, defaultSource)
 }
 
 const createAlerts = async (inputs, type, options = {}) => {
@@ -244,13 +252,10 @@ const validatePayload = (payload) => {
   return processName
 }
 
-const needsMessage = (alertData) => {
-  return (
-    !Object.hasOwn(alertData, 'message') ||
-    alertData.message == null ||
-    (typeof alertData.message === 'string' && alertData.message.trim().length === 0)
-  )
-}
+const needsMessage = (alertData) =>
+  !Object.hasOwn(alertData, 'message') ||
+  alertData.message == null ||
+  (typeof alertData.message === 'string' && alertData.message.trim().length === 0)
 
 const extractMessage = (maybeError, processName) => {
   if (maybeError instanceof Error) {
