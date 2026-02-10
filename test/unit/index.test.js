@@ -5,7 +5,7 @@ const {
   deriveAlertData,
   normalizeMessage,
   sanitizeValue
-} = require('../app/index')
+} = require('../../app/index')
 
 describe('alerting-utils', () => {
   beforeEach(() => {
