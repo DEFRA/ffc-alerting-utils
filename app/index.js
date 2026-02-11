@@ -28,9 +28,6 @@ const init = ({ topic, source, defaultType, EventPublisherClass } = {}) => {
 }
 
 const getPropertyMessage = (object, propertyName) => {
-  if (!object || typeof object !== 'object') {
-    return undefined
-  }
   const propertyValue = object[propertyName]
   if (propertyValue == null) {
     return undefined
@@ -143,9 +140,6 @@ const truncateStack = (stack, maxLines = 5) => {
 }
 
 const buildErrorData = (error) => {
-  if (!error || typeof error !== 'object') {
-    return {}
-  }
   return {
     name: error.name,
     message: normalizeMessage(error),
@@ -186,7 +180,8 @@ const createAlertFromError = (input, defaultType, defaultSource) => ({
 
 const createAlertFromOther = (input, defaultType, defaultSource) => {
   const message = normalizeMessage(input)
-  const data = sanitizeValue(input) || {}
+  const sanitized = sanitizeValue(input)
+  const data = (typeof sanitized === 'object' && sanitized !== null) ? sanitized : {}
   data.message = message
   return {
     source: defaultSource,
