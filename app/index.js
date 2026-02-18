@@ -13,16 +13,21 @@ let configuredDefaultType = null
 let configuredEventPublisherCtor = null
 
 const init = ({ topic, source, defaultType, EventPublisherClass } = {}) => {
-  if (topic) configuredTopic = topic
-  if (source) configuredSource = source
-  if (defaultType) configuredDefaultType = defaultType
-  if (EventPublisherClass) configuredEventPublisherCtor = EventPublisherClass
+  if (topic) {
+    configuredTopic = topic
+  }
+  if (source) {
+    configuredSource = source
+  }
+  if (defaultType) {
+    configuredDefaultType = defaultType
+  }
+  if (EventPublisherClass) {
+    configuredEventPublisherCtor = EventPublisherClass
+  }
 }
 
 const getPropertyMessage = (object, propertyName) => {
-  if (!object || typeof object !== 'object') {
-    return undefined
-  }
   const propertyValue = object[propertyName]
   if (propertyValue == null) {
     return undefined
@@ -135,9 +140,6 @@ const truncateStack = (stack, maxLines = 5) => {
 }
 
 const buildErrorData = (error) => {
-  if (!error || typeof error !== 'object') {
-    return {}
-  }
   return {
     name: error.name,
     message: normalizeMessage(error),
@@ -146,53 +148,64 @@ const buildErrorData = (error) => {
 }
 
 const looksLikeAlert = (obj) =>
-  obj && typeof obj === 'object' &&
-  (Object.prototype.hasOwnProperty.call(obj, 'source') ||
-    Object.prototype.hasOwnProperty.call(obj, 'type') ||
-    Object.prototype.hasOwnProperty.call(obj, 'data'))
+  obj &&
+  typeof obj === 'object' &&
+  (Object.hasOwn(obj, 'source') || Object.hasOwn(obj, 'type') || Object.hasOwn(obj, 'data'))
 
-const toAlert = (input, defaultType = undefined, options = {}) => {
-  const defaultSource = options.source || configuredSource || process.env.ALERT_SOURCE || 'ffc-doc-alerting'
-
-  if (!input && input !== 0) {
-    return null
-  }
-
-  if (looksLikeAlert(input)) {
-    const alert = {
-      source: input.source || defaultSource,
-      type: input.type || defaultType,
-      data: input.data !== undefined ? input.data : sanitizeValue(input)
+const ensureAlertDataHasMessage = (data, input) => {
+  if (typeof data === 'object' && data !== null) {
+    if (!Object.hasOwn(data, 'message')) {
+      data.message = normalizeMessage(input)
     }
-
-    if (!alert.data) {
-      const message = normalizeMessage(input)
-      alert.data = { message }
-    } else if (typeof alert.data === 'object') {
-      if (!Object.prototype.hasOwnProperty.call(alert.data, 'message')) {
-        alert.data.message = normalizeMessage(input)
-      }
-    }
-
-    return alert
+    return data
   }
+  return { message: normalizeMessage(input) }
+}
 
-  if (input instanceof Error) {
-    return {
-      source: defaultSource,
-      type: defaultType,
-      data: buildErrorData(input)
-    }
+const createAlertFromAlertLike = (input, defaultType, defaultSource) => {
+  const alert = {
+    source: input.source || defaultSource,
+    type: input.type || defaultType,
+    data: input.data === undefined ? sanitizeValue(input) : input.data
   }
+  alert.data = ensureAlertDataHasMessage(alert.data, input)
+  return alert
+}
 
+const createAlertFromError = (input, defaultType, defaultSource) => ({
+  source: defaultSource,
+  type: defaultType,
+  data: buildErrorData(input)
+})
+
+const createAlertFromOther = (input, defaultType, defaultSource) => {
   const message = normalizeMessage(input)
-  const data = sanitizeValue(input) || {}
+  const sanitized = sanitizeValue(input)
+  const data = (typeof sanitized === 'object' && sanitized !== null) ? sanitized : {}
   data.message = message
   return {
     source: defaultSource,
     type: defaultType,
     data
   }
+}
+
+const toAlert = (input, defaultType = undefined, options = {}) => {
+  const defaultSource = options.source || configuredSource || process.env.ALERT_SOURCE || 'ffc-doc-alerting'
+
+  if (!(input || input === 0)) {
+    return null
+  }
+
+  if (looksLikeAlert(input)) {
+    return createAlertFromAlertLike(input, defaultType, defaultSource)
+  }
+
+  if (input instanceof Error) {
+    return createAlertFromError(input, defaultType, defaultSource)
+  }
+
+  return createAlertFromOther(input, defaultType, defaultSource)
 }
 
 const createAlerts = async (inputs, type, options = {}) => {
@@ -234,13 +247,10 @@ const validatePayload = (payload) => {
   return processName
 }
 
-const needsMessage = (alertData) => {
-  return (
-    (!Object.hasOwn(alertData, 'message')) ||
-    (alertData.message == null) ||
-    (typeof alertData.message === 'string' && alertData.message.trim().length === 0)
-  )
-}
+const needsMessage = (alertData) =>
+  !Object.hasOwn(alertData, 'message') ||
+  alertData.message == null ||
+  (typeof alertData.message === 'string' && alertData.message.trim().length === 0)
 
 const extractMessage = (maybeError, processName) => {
   if (maybeError instanceof Error) {
@@ -288,7 +298,7 @@ const publish = async (alertPayloadArray, type, options = {}) => {
   }
 }
 
-const dataProcessingAlert = async (payload = {}, type, options = {}) => {
+const dataProcessingAlert = async (payload, type, options = {}) => {
   const processName = validatePayload(payload)
   const { defaultType } = options
   const effectiveType = type ?? defaultType ?? configuredDefaultType ?? process.env.ALERT_TYPE ?? 'uk.gov.defra.ffc.doc.data.processing.error'
