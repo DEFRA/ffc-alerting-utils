@@ -1,10 +1,13 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
-
 name: Node.js Package
+
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build:
@@ -17,14 +20,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci --ignore-scripts
+      - run: npm ci
       - run: npm test
 
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -32,6 +35,36 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
-      - run: npm install -g npm@latest --ignore-scripts
-      - run: npm ci --ignore-scripts
-      - run: npm publish --provenance --access public
+      - run: npm ci
+
+      - name: Get package version
+        id: package-version
+        run: |
+          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          echo "name=$(node -p "require('./package.json').name")" >> $GITHUB_OUTPUT
+
+      - name: Check if version exists on npm
+        id: check-version
+        run: |
+          if npm view ${{ steps.package-version.outputs.name }}@${{ steps.package-version.outputs.version }} version 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Enforce version increment
+        if: steps.check-version.outputs.exists == 'true'
+        run: |
+          echo "Version ${{ steps.package-version.outputs.version }} already exists on npm. Increment the version in package.json before merging to main."
+          exit 1
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.package-version.outputs.version }}
+          name: v${{ steps.package-version.outputs.version }}
+          draft: false
+          prerelease: false
