@@ -2,10 +2,7 @@
 name: '$(Build.SourceBranchName)$(System.PullRequest.SourceBranch)$(Rev:.r)'
 
 # Trigger configuration
-trigger:
-  - main
-  - feature/*
-  - release/*
+trigger: none
 
 pr:
   - main
