@@ -4,17 +4,15 @@ on:
   push:
     branches:
       - main
-
-permissions:
-  contents: read
-  id-token: write
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,7 +21,25 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  publish-next:
+    if: github.event_name == 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Set pre-release version
+        run: npm version $(node -p "require('./package.json').version")-next.${{ github.run_number }} --no-git-tag-version
+      - name: Publish to npm
+        run: npm publish --tag next --provenance --access public
+
   publish-latest:
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     permissions:
