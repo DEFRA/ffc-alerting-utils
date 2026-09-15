@@ -1,7 +1,7 @@
 const { init } = require('../../../app/config/init')
+const state = require('../../../app/config/state')
 const { createAlerts } = require('../../../app/publish/create-alerts')
 const { dataProcessingAlert } = require('../../../app/alerts/data-processing-alert')
-const { resetState } = require('../helpers/reset-state')
 const { sendBatchMessages } = require('../../../app/messaging/service-bus/send-batch-messages')
 const { getSender } = require('../../../app/messaging/service-bus/sender-cache')
 
@@ -34,7 +34,10 @@ describe('init', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    resetState()
+    state.setConfiguredTopic(null)
+    state.setConfiguredSource(null)
+    state.setConfiguredDefaultType(null)
+    state.setConfiguredConnectionConfig(null)
     delete process.env.ALERT_TOPIC
     delete process.env.ALERT_SOURCE
     delete process.env.ALERT_TYPE
@@ -71,7 +74,7 @@ describe('init', () => {
 
   test('should handle partial config', () => {
     init({ topic: 'partial.topic', connectionConfig })
-    expect(true).toBe(true)
+    expect(state.getConfiguredTopic()).toBe('partial.topic')
   })
 
   test('should not set topic when falsy', async () => {
